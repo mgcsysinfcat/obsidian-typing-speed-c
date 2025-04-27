@@ -25,6 +25,8 @@ interface MinMaxVals {
 
 function getMetricFactor(metric: String): number {
 	switch (metric) {
+		case 'cph':
+			return 3600.0;
 		case 'cpm':
 		case 'wpm':
 			return 60.0;
@@ -162,7 +164,7 @@ export default class TypingSpeedPlugin extends Plugin {
 			var min_val = 0;
 			var max_val = 0;
 
-			if (this.settings.metrics == 'cps' || this.settings.metrics == 'cpm') {
+			if (this.settings.metrics == 'cps' || this.settings.metrics == 'cpm' || this.settings.metrics == 'cph') {
 				added = this.keyTypedInSecond;
 				this.keyTypedInSecond = 0;
 			}
@@ -311,6 +313,7 @@ class TypingSpeedSettingTab extends PluginSettingTab {
 				.addOption('wpm', 'word per minute')
 				.addOption('cps', 'character per second')
 				.addOption('cpm', 'character per minute')
+				.addOption('cph', "character per hour")
 				.setValue(this.plugin.settings.metrics)
 				.onChange(async (value) => {
 					this.plugin.settings.metrics = value;
