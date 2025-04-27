@@ -74,7 +74,9 @@ export default class TypingSpeedPlugin extends Plugin {
 
 	Typed: number[] = [0];
 
-
+	// Add these class properties
+	private isComposing = false;
+	private ignoreNextSpace = false
 	pollings_in_seconds: number = 1.0;
 	keyTypedInSecond: number = 0;
 	wordTypedInSecond: number = 0;
@@ -107,9 +109,30 @@ export default class TypingSpeedPlugin extends Plugin {
 		this.statusBarItemEl.setText('');
 
 		this.addSettingTab(new TypingSpeedSettingTab(this.app, this));
-
+		// Register composition events
+		this.registerDomEvent(document, 'compositionstart', () => {
+			this.isComposing = true;
+		});
+		this.registerDomEvent(document, 'compositionend', (evt: CompositionEvent) => {
+			this.isComposing = false;
+			const composedText = evt.data;
+			if (composedText) {
+				// Count each composed character
+				const length = composedText.length;
+				this.keyTypedInSecond += length;
+				this.keyTypedSinceSpace += length;
+			}
+			// Temporarily ignore space after composition
+			this.ignoreNextSpace = true;
+			setTimeout(() => {
+				this.ignoreNextSpace = false;
+			}, 100);
+		});
 		this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
-
+			// Skip during IME composition
+			if (this.isComposing) return;
+			// Skip space used for IME commit
+			if (evt.key === ' ' && this.ignoreNextSpace) return;
 			// only some key are valid
 			const keyRegex: RegExp = /^[\p{L},;1-9]$/gu;
 
